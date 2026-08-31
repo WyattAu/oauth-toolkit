@@ -1,0 +1,26 @@
+[package]
+name = "oauth-toolkit-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+oauth-toolkit = { path = ".." }
+
+[[bin]]
+name = "fuzz_pkce"
+path = "fuzz_targets/fuzz_pkce.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_scope_parse"
+path = "fuzz_targets/fuzz_scope_parse.rs"
+test = false
+doc = false
