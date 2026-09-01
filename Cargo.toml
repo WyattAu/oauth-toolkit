@@ -6,6 +6,8 @@ rust-version = "1.85"
 description = "Shared OAuth2/OIDC primitives — crypto, PKCE, scopes, CSRF, social login, OIDC, JWKS validation"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/WyattAu/oauth-toolkit"
+keywords = ["oauth", "oidc", "pkce"]
+categories = ["cryptography", "web-programming"]
 
 [dependencies]
 async-trait = "0.1"
@@ -30,6 +32,7 @@ zeroize = { version = "1", features = ["derive"] }
 [dev-dependencies]
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "test-util"] }
 criterion = { version = "0.5", features = ["html_reports"] }
+proptest = "1"
 
 [lints.rust]
 unsafe_code = "forbid"
