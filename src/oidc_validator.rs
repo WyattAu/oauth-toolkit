@@ -1,9 +1,9 @@
 //! JWKS-backed OIDC token validation.
 
-use std::collections::HashMap;
-use std::sync::Arc;
 use parking_lot::RwLock;
 use serde::de::DeserializeOwned;
+use std::collections::HashMap;
+use std::sync::Arc;
 
 use crate::oidc::OidcError;
 
@@ -66,7 +66,9 @@ impl OidcValidator {
             }
         }
 
-        Err(OidcError::TokenExchangeFailed("no matching key found".into()))
+        Err(OidcError::TokenExchangeFailed(
+            "no matching key found".into(),
+        ))
     }
 
     /// Force-refresh the JWKS cache.
@@ -74,7 +76,8 @@ impl OidcValidator {
         let jwks_uri = match &self.config.jwks_uri {
             Some(uri) => uri.clone(),
             None => {
-                let discovery = crate::oidc::fetch_discovery(&self.http_client, &self.config.issuer).await?;
+                let discovery =
+                    crate::oidc::fetch_discovery(&self.http_client, &self.config.issuer).await?;
                 discovery.jwks_uri
             }
         };
@@ -97,8 +100,8 @@ impl OidcValidator {
                 if let (Some(kty), Some(kid)) = (key_obj["kty"].as_str(), key_obj["kid"].as_str()) {
                     if kty == "RSA" {
                         if let (Some(n), Some(e)) = (key_obj["n"].as_str(), key_obj["e"].as_str()) {
-                            let decoding_key = jsonwebtoken::DecodingKey::from_rsa_components(n, e)
-                                .ok();
+                            let decoding_key =
+                                jsonwebtoken::DecodingKey::from_rsa_components(n, e).ok();
                             if let Some(key) = decoding_key {
                                 keys.insert(kid.to_string(), key);
                             }

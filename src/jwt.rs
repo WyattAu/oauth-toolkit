@@ -19,13 +19,14 @@ pub enum JwtError {
 }
 
 /// Encode a claims struct as an HS256 JWT.
-pub fn encode_hs256(
-    claims: &impl Serialize,
-    secret: &str,
-) -> Result<String, JwtError> {
+pub fn encode_hs256(claims: &impl Serialize, secret: &str) -> Result<String, JwtError> {
     let header = jsonwebtoken::Header::new(jsonwebtoken::Algorithm::HS256);
-    jsonwebtoken::encode(&header, claims, &jsonwebtoken::EncodingKey::from_secret(secret.as_bytes()))
-        .map_err(|e| JwtError::Invalid(e.to_string()))
+    jsonwebtoken::encode(
+        &header,
+        claims,
+        &jsonwebtoken::EncodingKey::from_secret(secret.as_bytes()),
+    )
+    .map_err(|e| JwtError::Invalid(e.to_string()))
 }
 
 /// Decode and validate an HS256 JWT, returning typed claims.
@@ -63,9 +64,7 @@ pub fn extract_bearer_token(header_value: &str) -> Option<&str> {
 
 /// Build a Set-Cookie header value for an auth token.
 pub fn build_auth_cookie(cookie_name: &str, token: &str, max_age_secs: i64) -> String {
-    format!(
-        "{cookie_name}={token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age={max_age_secs}"
-    )
+    format!("{cookie_name}={token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age={max_age_secs}")
 }
 
 #[cfg(test)]
@@ -88,7 +87,8 @@ mod tests {
             iat: 1000000000,
         };
         let token = encode_hs256(&claims, "secret-key-1234567890123456").unwrap();
-        let decoded: TestClaims = decode_hs256(&token, "secret-key-1234567890123456", None, None).unwrap();
+        let decoded: TestClaims =
+            decode_hs256(&token, "secret-key-1234567890123456", None, None).unwrap();
         assert_eq!(decoded, claims);
     }
 

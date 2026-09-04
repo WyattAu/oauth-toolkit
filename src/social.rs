@@ -1,6 +1,11 @@
 //! Social login providers (GitHub, Google).
+//!
+//! Endpoint URLs come from [`crate::providers::endpoints`] — the single
+//! source of truth shared with the mail provider presets.
 
 use serde::{Deserialize, Serialize};
+
+use crate::providers::endpoints;
 
 /// Supported social login providers.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -15,16 +20,16 @@ impl SocialProvider {
     /// Authorization URL for the provider.
     pub fn authorize_url(&self) -> &'static str {
         match self {
-            Self::GitHub => "https://github.com/login/oauth/authorize",
-            Self::Google => "https://accounts.google.com/o/oauth2/v2/auth",
+            Self::GitHub => endpoints::GITHUB_AUTHORIZE_URL,
+            Self::Google => endpoints::GOOGLE_AUTHORIZE_URL,
         }
     }
 
     /// Token exchange URL for the provider.
     pub fn token_url(&self) -> &'static str {
         match self {
-            Self::GitHub => "https://github.com/login/oauth/access_token",
-            Self::Google => "https://oauth2.googleapis.com/token",
+            Self::GitHub => endpoints::GITHUB_TOKEN_URL,
+            Self::Google => endpoints::GOOGLE_TOKEN_URL,
         }
     }
 
@@ -39,8 +44,8 @@ impl SocialProvider {
     /// User info URL for the provider.
     pub fn user_info_url(&self) -> &'static str {
         match self {
-            Self::GitHub => "https://api.github.com/user",
-            Self::Google => "https://www.googleapis.com/oauth2/v2/userinfo",
+            Self::GitHub => endpoints::GITHUB_USER_INFO_URL,
+            Self::Google => endpoints::GOOGLE_USER_INFO_URL,
         }
     }
 }
@@ -141,7 +146,9 @@ pub async fn exchange_code(
             body["access_token"]
                 .as_str()
                 .map(String::from)
-                .ok_or_else(|| SocialError::TokenExchangeFailed("no access_token in response".into()))
+                .ok_or_else(|| {
+                    SocialError::TokenExchangeFailed("no access_token in response".into())
+                })
         }
         SocialProvider::Google => {
             let resp = client
@@ -165,7 +172,9 @@ pub async fn exchange_code(
             body["access_token"]
                 .as_str()
                 .map(String::from)
-                .ok_or_else(|| SocialError::TokenExchangeFailed("no access_token in response".into()))
+                .ok_or_else(|| {
+                    SocialError::TokenExchangeFailed("no access_token in response".into())
+                })
         }
     }
 }
@@ -194,14 +203,8 @@ pub async fn fetch_user_info(
                 .as_str()
                 .or_else(|| body["id"].as_i64().map(|_| ""))
                 .ok_or(SocialError::MissingField("id".into()))?;
-            let email = body["email"]
-                .as_str()
-                .unwrap_or("")
-                .to_string();
-            let name = body["name"]
-                .as_str()
-                .unwrap_or("")
-                .to_string();
+            let email = body["email"].as_str().unwrap_or("").to_string();
+            let name = body["name"].as_str().unwrap_or("").to_string();
             let avatar = body["avatar_url"].as_str().map(String::from);
 
             Ok(SocialUserInfo {
@@ -219,10 +222,7 @@ pub async fn fetch_user_info(
             let email = body["email"]
                 .as_str()
                 .ok_or(SocialError::MissingField("email".into()))?;
-            let name = body["name"]
-                .as_str()
-                .unwrap_or("")
-                .to_string();
+            let name = body["name"].as_str().unwrap_or("").to_string();
             let avatar = body["picture"].as_str().map(String::from);
 
             Ok(SocialUserInfo {
@@ -305,5 +305,34 @@ mod tests {
         let long = "a".repeat(50);
         let result = sanitize_username(&long);
         assert!(result.len() <= 30);
+    }
+
+    #[test]
+    fn provider_urls_match_endpoint_constants() {
+        // Dedupe regression: social URLs must come from providers::endpoints.
+        assert_eq!(
+            SocialProvider::GitHub.authorize_url(),
+            endpoints::GITHUB_AUTHORIZE_URL
+        );
+        assert_eq!(
+            SocialProvider::GitHub.token_url(),
+            endpoints::GITHUB_TOKEN_URL
+        );
+        assert_eq!(
+            SocialProvider::GitHub.user_info_url(),
+            endpoints::GITHUB_USER_INFO_URL
+        );
+        assert_eq!(
+            SocialProvider::Google.authorize_url(),
+            endpoints::GOOGLE_AUTHORIZE_URL
+        );
+        assert_eq!(
+            SocialProvider::Google.token_url(),
+            endpoints::GOOGLE_TOKEN_URL
+        );
+        assert_eq!(
+            SocialProvider::Google.user_info_url(),
+            endpoints::GOOGLE_USER_INFO_URL
+        );
     }
 }

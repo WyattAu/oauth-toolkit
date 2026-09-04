@@ -43,12 +43,18 @@ mod tests {
 
     #[test]
     fn parse_scopes_whitespace() {
-        assert_eq!(parse_scopes("read write admin"), vec!["admin", "read", "write"]);
+        assert_eq!(
+            parse_scopes("read write admin"),
+            vec!["admin", "read", "write"]
+        );
     }
 
     #[test]
     fn parse_scopes_comma() {
-        assert_eq!(parse_scopes("read,write,admin"), vec!["admin", "read", "write"]);
+        assert_eq!(
+            parse_scopes("read,write,admin"),
+            vec!["admin", "read", "write"]
+        );
     }
 
     #[test]
@@ -77,6 +83,9 @@ mod tests {
 
     #[test]
     fn scopes_subset_false() {
-        assert!(!scopes_subset(&["a".into(), "c".into()], &["a".into(), "b".into()]));
+        assert!(!scopes_subset(
+            &["a".into(), "c".into()],
+            &["a".into(), "b".into()]
+        ));
     }
 }

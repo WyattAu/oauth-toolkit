@@ -1,7 +1,7 @@
 //! CSRF state management with pluggable backends.
 
-use std::time::{Duration, Instant};
 use dashmap::DashMap;
+use std::time::{Duration, Instant};
 
 /// CSRF state store trait.
 #[async_trait::async_trait]
@@ -78,7 +78,8 @@ impl CsrfStore for MemoryCsrfStore {
 
     async fn cleanup_expired(&self) {
         let now = Instant::now();
-        self.entries.retain(|_, entry| now.duration_since(entry.created_at) <= self.ttl);
+        self.entries
+            .retain(|_, entry| now.duration_since(entry.created_at) <= self.ttl);
     }
 }
 
@@ -129,9 +130,14 @@ mod tests {
     #[tokio::test]
     async fn memory_store_roundtrip() {
         let store = MemoryCsrfStore::new();
-        store.store("key1", "nonce1", Some("https://app.com".into())).await;
+        store
+            .store("key1", "nonce1", Some("https://app.com".into()))
+            .await;
         let result = store.retrieve_and_consume("key1").await;
-        assert_eq!(result, Some(("nonce1".into(), Some("https://app.com".into()))));
+        assert_eq!(
+            result,
+            Some(("nonce1".into(), Some("https://app.com".into())))
+        );
         assert!(store.retrieve_and_consume("key1").await.is_none());
     }
 

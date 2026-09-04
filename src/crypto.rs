@@ -18,8 +18,7 @@ pub fn sha256_hex(value: &str) -> String {
 ///
 /// Used for hashing client secrets at registration time.
 pub fn hmac_sha256_hex(key: &str, value: &str) -> String {
-    let mut mac = HmacSha256::new_from_slice(key.as_bytes())
-        .expect("HMAC accepts any key length");
+    let mut mac = HmacSha256::new_from_slice(key.as_bytes()).expect("HMAC accepts any key length");
     mac.update(value.as_bytes());
     hex::encode(mac.finalize().into_bytes())
 }
@@ -29,8 +28,8 @@ pub fn hmac_sha256_verify(key: &str, value: &str, signature_hex: &str) -> Result
     let mut mac = HmacSha256::new_from_slice(key.as_bytes())
         .map_err(|e| CryptoError::InvalidKey(e.to_string()))?;
     mac.update(value.as_bytes());
-    let expected = hex::decode(signature_hex)
-        .map_err(|e| CryptoError::InvalidHex(e.to_string()))?;
+    let expected =
+        hex::decode(signature_hex).map_err(|e| CryptoError::InvalidHex(e.to_string()))?;
     mac.verify_slice(&expected)
         .map_err(|_| CryptoError::SignatureMismatch)
 }

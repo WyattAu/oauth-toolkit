@@ -9,7 +9,11 @@ pub fn redirect_uri_allowed(requested: &str, registered: &[String]) -> bool {
 ///
 /// Returns `"{base_url}/auth/callback/{provider}"`.
 pub fn build_redirect_uri(base_url: &str, provider: &str) -> String {
-    format!("{}/auth/callback/{}", base_url.trim_end_matches('/'), provider)
+    format!(
+        "{}/auth/callback/{}",
+        base_url.trim_end_matches('/'),
+        provider
+    )
 }
 
 #[cfg(test)]
@@ -18,12 +22,18 @@ mod tests {
 
     #[test]
     fn redirect_uri_allowed_exact() {
-        assert!(redirect_uri_allowed("https://app.com/callback", &["https://app.com/callback".into()]));
+        assert!(redirect_uri_allowed(
+            "https://app.com/callback",
+            &["https://app.com/callback".into()]
+        ));
     }
 
     #[test]
     fn redirect_uri_allowed_mismatch() {
-        assert!(!redirect_uri_allowed("https://evil.com/callback", &["https://app.com/callback".into()]));
+        assert!(!redirect_uri_allowed(
+            "https://evil.com/callback",
+            &["https://app.com/callback".into()]
+        ));
     }
 
     #[test]
@@ -33,11 +43,17 @@ mod tests {
 
     #[test]
     fn build_redirect_uri_works() {
-        assert_eq!(build_redirect_uri("https://app.com", "github"), "https://app.com/auth/callback/github");
+        assert_eq!(
+            build_redirect_uri("https://app.com", "github"),
+            "https://app.com/auth/callback/github"
+        );
     }
 
     #[test]
     fn build_redirect_uri_trailing_slash() {
-        assert_eq!(build_redirect_uri("https://app.com/", "google"), "https://app.com/auth/callback/google");
+        assert_eq!(
+            build_redirect_uri("https://app.com/", "google"),
+            "https://app.com/auth/callback/google"
+        );
     }
 }

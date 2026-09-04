@@ -1,5 +1,5 @@
-use proptest::prelude::*;
 use oauth_toolkit::pkce::{generate_pkce_pair, verify_pkce};
+use proptest::prelude::*;
 
 proptest! {
     #[test]
