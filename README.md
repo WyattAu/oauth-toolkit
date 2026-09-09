@@ -49,7 +49,8 @@ deep OIDC implementation:
   (client credentials, device authorization, extension grants) with total
   control over every request. oauth-toolkit implements the flows apps
   actually ship — authorization code with PKCE and refresh — and trades
-  configurability for turnkey ergonomics.
+  configurability for turnkey ergonomics. There is also no device flow,
+  no DPoP (RFC 9449), and no PAR (RFC 9126).
 - **ID-token validation is the shallower variant.** [`openidconnect`]
   validates `nonce`, `at_hash`, `azp`, per-`kid` key selection, and
   multiple algorithms. oauth-toolkit's validator is RS256 + issuer/audience
