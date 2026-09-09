@@ -58,6 +58,8 @@ fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
 }
 
 #[cfg(test)]
+// Test code: unwrap/expect are the idiomatic way to assert setup success.
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
 

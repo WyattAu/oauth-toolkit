@@ -15,6 +15,8 @@ fn bench_hmac_sign(c: &mut Criterion) {
     });
 }
 
+// Bench fixtures: unwrap/expect keep the setup code concise.
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 fn bench_jwt_roundtrip(c: &mut Criterion) {
     let secret = "a-very-long-secret-key-for-jwt-signing-ops";
     let claims = serde_json::json!({"sub": "user123", "exp": 9999999999i64, "iat": 1000});

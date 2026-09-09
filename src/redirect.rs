@@ -17,6 +17,8 @@ pub fn build_redirect_uri(base_url: &str, provider: &str) -> String {
 }
 
 #[cfg(test)]
+// Test code: unwrap/expect are the idiomatic way to assert setup success.
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
 

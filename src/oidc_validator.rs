@@ -131,6 +131,8 @@ impl OidcValidator {
 }
 
 #[cfg(test)]
+// Test code: unwrap/expect are the idiomatic way to assert setup success.
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
 
