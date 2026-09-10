@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 /// OIDC provider configuration.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OidcConfig {
-    /// OIDC issuer URL (e.g., "https://accounts.google.com").
+    /// OIDC issuer URL (e.g., <https://accounts.google.com>).
     pub issuer: String,
     /// OAuth2 client ID.
     pub client_id: String,
