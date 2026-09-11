@@ -1,8 +1,11 @@
 # oauth-toolkit
 
+[![docs.rs](https://docs.rs/oauth-toolkit/badge.svg)](https://docs.rs/oauth-toolkit)
+[![crates.io](https://img.shields.io/crates/v/oauth-toolkit.svg)](https://crates.io/crates/oauth-toolkit)
+[![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE-MIT)
+
 > Turnkey OAuth2/OIDC for Rust — **desktop loopback flows (RFC 8252)**, **mail-provider presets**, PKCE, crypto, scopes, CSRF, social login, JWKS validation.
 
-[![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue)](LICENSE-MIT)
 [![CI](https://img.shields.io/github/actions/workflow/status/WyattAu/oauth-toolkit/ci.yaml?branch=main)](https://github.com/WyattAu/oauth-toolkit/actions)
 
 ## Why oauth-toolkit
