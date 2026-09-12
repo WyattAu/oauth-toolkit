@@ -29,7 +29,7 @@ parking_lot = "0.12"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "test-util"] }
-criterion = { version = "0.5", features = ["html_reports"] }
+criterion = { version = "0.8", features = ["html_reports"] }
 proptest = "1"
 
 [lints.rust]
