@@ -1,7 +1,10 @@
 //! CSRF state management with pluggable backends.
+//!
+//! The in-memory store delegates expiry handling to
+//! [`shared_state::ttl::TtlCache`] instead of hand-rolling a TTL map.
 
-use dashmap::DashMap;
-use std::time::{Duration, Instant};
+use shared_state::ttl::TtlCache;
+use std::time::Duration;
 
 /// CSRF state store trait.
 #[async_trait::async_trait]
@@ -18,16 +21,9 @@ pub trait CsrfStore: Send + Sync {
     async fn cleanup_expired(&self);
 }
 
-/// In-memory CSRF store using DashMap with TTL.
+/// In-memory CSRF store with TTL-backed one-time semantics.
 pub struct MemoryCsrfStore {
-    entries: DashMap<String, CsrfEntry>,
-    ttl: Duration,
-}
-
-struct CsrfEntry {
-    nonce: String,
-    redirect_url: Option<String>,
-    created_at: Instant,
+    entries: TtlCache<String, (String, Option<String>)>,
 }
 
 impl Default for MemoryCsrfStore {
@@ -39,17 +35,13 @@ impl Default for MemoryCsrfStore {
 impl MemoryCsrfStore {
     /// Create a new in-memory store with 10-minute TTL.
     pub fn new() -> Self {
-        Self {
-            entries: DashMap::new(),
-            ttl: Duration::from_secs(600),
-        }
+        Self::with_ttl(Duration::from_secs(600))
     }
 
     /// Create with custom TTL.
     pub fn with_ttl(ttl: Duration) -> Self {
         Self {
-            entries: DashMap::new(),
-            ttl,
+            entries: TtlCache::new(ttl),
         }
     }
 }
@@ -57,29 +49,19 @@ impl MemoryCsrfStore {
 #[async_trait::async_trait]
 impl CsrfStore for MemoryCsrfStore {
     async fn store(&self, key: &str, nonce: &str, redirect_url: Option<String>) -> bool {
-        self.entries.insert(
-            key.to_string(),
-            CsrfEntry {
-                nonce: nonce.to_string(),
-                redirect_url,
-                created_at: Instant::now(),
-            },
-        );
+        self.entries
+            .insert(key.to_string(), (nonce.to_string(), redirect_url));
         true
     }
 
     async fn retrieve_and_consume(&self, key: &str) -> Option<(String, Option<String>)> {
-        let entry = self.entries.remove(key)?;
-        if entry.1.created_at.elapsed() > self.ttl {
-            return None;
-        }
-        Some((entry.1.nonce, entry.1.redirect_url))
+        // One-time use: `take_fresh` removes the entry and refuses
+        // expired ones, so a stale state can never be replayed.
+        self.entries.take_fresh(&key.to_string())
     }
 
     async fn cleanup_expired(&self) {
-        let now = Instant::now();
-        self.entries
-            .retain(|_, entry| now.duration_since(entry.created_at) <= self.ttl);
+        self.entries.cleanup();
     }
 }
 
