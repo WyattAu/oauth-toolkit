@@ -21,7 +21,7 @@ pub enum PkceMethod {
 /// - `challenge` is `base64url(SHA256(verifier))`
 pub fn generate_pkce_pair() -> (String, String) {
     let mut verifier_bytes = [0u8; 32];
-    rand::rng().fill(&mut verifier_bytes[..]);
+    rand::rng().fill_bytes(&mut verifier_bytes[..]);
     let verifier = URL_SAFE_NO_PAD.encode(verifier_bytes);
 
     let challenge = sha256_base64url(&verifier);
