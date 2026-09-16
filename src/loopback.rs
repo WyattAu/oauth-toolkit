@@ -133,7 +133,8 @@ impl LoopbackFlow {
         })
     }
 
-    /// Convenience wrapper binding a flow for a [`MailProvider`] preset.
+    /// Convenience wrapper binding a flow for a
+    /// [`MailProvider`](crate::providers::MailProvider) preset.
     ///
     /// # Errors
     /// [`LoopbackError::Bind`] if the loopback listener cannot bind.
