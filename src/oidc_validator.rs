@@ -56,7 +56,7 @@ impl OidcValidator {
         self.maybe_refresh_jwks().await?;
 
         let cache = self.jwks.read();
-        for (_kid, key) in cache.keys.iter() {
+        for key in cache.keys.values() {
             let mut validation = jsonwebtoken::Validation::new(jsonwebtoken::Algorithm::RS256);
             validation.set_audience(&[&self.config.audience]);
             validation.set_issuer(&[&self.config.issuer]);
