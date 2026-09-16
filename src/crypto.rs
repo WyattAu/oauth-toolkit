@@ -18,6 +18,9 @@ pub fn sha256_hex(value: &str) -> String {
 ///
 /// Used for hashing client secrets at registration time.
 pub fn hmac_sha256_hex(key: &str, value: &str) -> String {
+    // HMAC-SHA256 accepts keys of any length, so `new_from_slice` cannot
+    // fail here; the panic branch is unreachable by construction.
+    #[allow(clippy::expect_used)]
     let mut mac = HmacSha256::new_from_slice(key.as_bytes()).expect("HMAC accepts any key length");
     mac.update(value.as_bytes());
     hex::encode(mac.finalize().into_bytes())
