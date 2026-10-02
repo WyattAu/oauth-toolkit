@@ -1,6 +1,6 @@
 //! Cryptographic helpers for OAuth2 tokens and secrets.
 
-use hmac::{Hmac, Mac};
+use hmac::{Hmac, KeyInit, Mac};
 use rand::Rng;
 use sha2::{Digest, Sha256};
 
