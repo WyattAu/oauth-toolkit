@@ -1,7 +1,7 @@
 [package]
 exclude = ["/target"]
 name = "oauth-toolkit"
-version = "0.2.2"
+version = "0.3.0"
 edition = "2024"
 rust-version = "1.85"
 description = "Shared OAuth2/OIDC primitives — crypto, PKCE, scopes, CSRF, social login, OIDC, JWKS validation"
