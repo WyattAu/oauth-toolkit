@@ -42,7 +42,7 @@ pub fn hmac_sha256_verify(key: &str, value: &str, signature_hex: &str) -> Result
 /// Returns "{prefix}{random_hex}" where random_hex has `2 * byte_length` hex characters.
 pub fn generate_opaque_token(prefix: &str, byte_length: usize) -> String {
     let mut bytes = vec![0u8; byte_length];
-    rand::rng().fill(&mut bytes[..]);
+    rand::rng().fill_bytes(&mut bytes[..]);
     format!("{}{}", prefix, hex::encode(bytes))
 }
 
