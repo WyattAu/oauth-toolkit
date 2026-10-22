@@ -59,7 +59,6 @@ pub fn decode_hs256<T: for<'de> Deserialize<'de>>(
     })
 }
 
-
 /// Encode a claims struct as an ES256 JWT (P-256 ECDSA, PKCS#8 PEM key).
 ///
 /// # Errors
@@ -218,7 +217,7 @@ MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgxvCgr98XLeY5qBtV
 EUAHmzqfBkJclip1tDcOaOnZRnWhRANCAARciewarZqgQwFGY5sTdhAs6Bl8KIjz
 KJiV2d3HJBDLGgb/HCrFnhPOFPR2wzgrDrIQvBTQ+dvaEp9KA7EONjR3
 -----END PRIVATE KEY-----"##;
-    const TEST_ES256_PUB: &str =r##"-----BEGIN PUBLIC KEY-----
+    const TEST_ES256_PUB: &str = r##"-----BEGIN PUBLIC KEY-----
 MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEXInsGq2aoEMBRmObE3YQLOgZfCiI
 8yiYldndxyQQyxoG/xwqxZ4TzhT0dsM4Kw6yELwU0Pnb2hKfSgOxDjY0dw==
 -----END PUBLIC KEY-----

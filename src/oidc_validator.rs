@@ -19,7 +19,7 @@ pub struct OidcValidatorConfig {
 }
 
 struct JwksCache {
-    keys: HashMap<String, jsonwebtoken::DecodingKey>,
+    keys: HashMap<String, (jsonwebtoken::DecodingKey, jsonwebtoken::Algorithm)>,
     fetched_at: std::time::Instant,
 }
 
@@ -56,8 +56,8 @@ impl OidcValidator {
         self.maybe_refresh_jwks().await?;
 
         let cache = self.jwks.read();
-        for key in cache.keys.values() {
-            let mut validation = jsonwebtoken::Validation::new(jsonwebtoken::Algorithm::RS256);
+        for (key, alg) in cache.keys.values() {
+            let mut validation = jsonwebtoken::Validation::new(*alg);
             validation.set_audience(&[&self.config.audience]);
             validation.set_issuer(&[&self.config.issuer]);
 
@@ -98,14 +98,40 @@ impl OidcValidator {
         if let Some(key_array) = jwks_value["keys"].as_array() {
             for key_obj in key_array {
                 if let (Some(kty), Some(kid)) = (key_obj["kty"].as_str(), key_obj["kid"].as_str()) {
-                    if kty == "RSA" {
-                        if let (Some(n), Some(e)) = (key_obj["n"].as_str(), key_obj["e"].as_str()) {
-                            let decoding_key =
-                                jsonwebtoken::DecodingKey::from_rsa_components(n, e).ok();
-                            if let Some(key) = decoding_key {
-                                keys.insert(kid.to_string(), key);
+                    // Algorithm derived from the key type: the cache
+                    // carries it so validation tries the right one (the
+                    // crate documents ES256 support; hardcoding RS256
+                    // made authbox-issued EC tokens unvalidatable — SIS
+                    // round 7 iter 64).
+                    let algorithm = match kty {
+                        "RSA" => Some(jsonwebtoken::Algorithm::RS256),
+                        "EC" => Some(jsonwebtoken::Algorithm::ES256),
+                        "OKP" => Some(jsonwebtoken::Algorithm::EdDSA),
+                        _ => None,
+                    };
+                    let decoding_key = match (kty, algorithm) {
+                        ("RSA", _) => {
+                            if let (Some(n), Some(e)) =
+                                (key_obj["n"].as_str(), key_obj["e"].as_str())
+                            {
+                                jsonwebtoken::DecodingKey::from_rsa_components(n, e).ok()
+                            } else {
+                                None
                             }
                         }
+                        ("EC", _) => {
+                            if let (Some(x), Some(y)) =
+                                (key_obj["x"].as_str(), key_obj["y"].as_str())
+                            {
+                                jsonwebtoken::DecodingKey::from_ec_components(x, y).ok()
+                            } else {
+                                None
+                            }
+                        }
+                        _ => None,
+                    };
+                    if let (Some(key), Some(alg)) = (decoding_key, algorithm) {
+                        keys.insert(kid.to_string(), (key, alg));
                     }
                 }
             }
