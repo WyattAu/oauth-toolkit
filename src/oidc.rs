@@ -22,12 +22,16 @@ pub struct OidcConfig {
 pub struct OidcDiscovery {
     /// Issuer URL.
     pub issuer: String,
-    /// Authorization endpoint URL.
-    pub authorization_endpoint: String,
+    /// Authorization endpoint URL. Absent on client-credentials-only
+    /// issuers (no interactive flow).
+    #[serde(default)]
+    pub authorization_endpoint: Option<String>,
     /// Token endpoint URL.
     pub token_endpoint: String,
-    /// Userinfo endpoint URL.
-    pub userinfo_endpoint: String,
+    /// Userinfo endpoint URL. Absent on client-credentials-only
+    /// issuers.
+    #[serde(default)]
+    pub userinfo_endpoint: Option<String>,
     /// JWKS URI for key discovery.
     pub jwks_uri: String,
 }
