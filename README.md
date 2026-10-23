@@ -1,4 +1,5 @@
 # oauth-toolkit
+[![Estate integration](https://github.com/WyattAu/estate-integration/actions/workflows/ci.yml/badge.svg)](https://github.com/WyattAu/estate-integration/actions/workflows/ci.yml)
 
 [![docs.rs](https://docs.rs/oauth-toolkit/badge.svg)](https://docs.rs/oauth-toolkit)
 [![crates.io](https://img.shields.io/crates/v/oauth-toolkit.svg)](https://crates.io/crates/oauth-toolkit)
