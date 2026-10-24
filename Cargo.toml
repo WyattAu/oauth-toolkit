@@ -1,10 +1,10 @@
 [package]
 exclude = ["/target"]
 name = "oauth-toolkit"
-version = "0.4.0"
+version = "0.4.1"
 edition = "2024"
 rust-version = "1.85"
-description = "Shared OAuth2/OIDC primitives — crypto, PKCE, scopes, CSRF, social login, OIDC, JWKS validation"
+description = "Shared OAuth2/OIDC primitives: crypto, PKCE, scopes, CSRF, social login, OIDC, JWKS validation"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/WyattAu/oauth-toolkit"
 keywords = ["oauth", "oidc", "pkce"]
