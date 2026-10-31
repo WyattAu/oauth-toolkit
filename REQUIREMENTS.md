@@ -1,9 +1,9 @@
-# Requirements — oauth-toolkit
+# Requirements: oauth-toolkit
 
 Numbered, testable requirements. Every requirement maps to at least one named
 test; every security-relevant test cites at least one requirement.
 
-Scope note: `oauth-toolkit` provides the shared OAuth2/OIDC primitives —
+Scope note: `oauth-toolkit` provides the shared OAuth2/OIDC primitives -
 PKCE, CSRF state, HMAC/crypto helpers, HS256 JWT, token exchange/refresh,
 OIDC discovery/validation, redirect-URI policy, scope handling, social
 provider presets, and the local loopback listener.
@@ -28,14 +28,14 @@ provider presets, and the local loopback listener.
 
 | ID | Requirement | Priority |
 |----|-------------|----------|
-| REQ-OT-100 | A JWT signed with a different secret is rejected by `decode_hs256` — never accepted | MUST |
+| REQ-OT-100 | A JWT signed with a different secret is rejected by `decode_hs256`; never accepted | MUST |
 | REQ-OT-101 | HMAC verification fails on wrong key, wrong message, or non-hex signature input | MUST |
 | REQ-OT-102 | PKCE verification fails on a wrong verifier, and an unknown method string is rejected rather than coerced | MUST |
 | REQ-OT-103 | The loopback capture rejects a redirect whose `state` does not match the issued nonce, and a state value is single-use | MUST |
 | REQ-OT-104 | Redirect-URI checking is exact-match: a URI that merely extends a registered URI is refused | MUST |
 | REQ-OT-105 | Scope validation rejects any requested scope not present in the allow-list | MUST |
 | REQ-OT-106 | Provider/userinfo network failures surface as typed errors; no panic path exists on hostile responses | MUST |
-| REQ-OT-107 | Outbound provider HTTP uses TLS (rustls) with default certificate verification — invalid-certificate bypass is not exposed | MUST |
+| REQ-OT-107 | Outbound provider HTTP uses TLS (rustls) with default certificate verification; invalid-certificate bypass is not exposed | MUST |
 
 ## Robustness
 
@@ -55,7 +55,7 @@ provider presets, and the local loopback listener.
 - AUDIT: `hmac_sha256_verify` rejects non-hex input before any
   comparison work (fail-fast, no oracle from comparison timing).
 - FLAG (accepted, invariant): `crypto.rs` contains one `expect` on
-  `HmacSha256::new_from_slice` — HMAC accepts any key length by RFC
+  `HmacSha256::new_from_slice`; HMAC accepts any key length by RFC
   2104 definition, so the error arm is unreachable; the expectation is
   documented at the call site.
 - AUDIT: opaque tokens/state nonces use the OS CSPRNG via `rand`;

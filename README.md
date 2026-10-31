@@ -5,7 +5,7 @@
 [![crates.io](https://img.shields.io/crates/v/oauth-toolkit.svg)](https://crates.io/crates/oauth-toolkit)
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE-MIT)
 
-> Turnkey OAuth2/OIDC for Rust — **desktop loopback flows (RFC 8252)**, **mail-provider presets**, PKCE, crypto, scopes, CSRF, social login, JWKS validation.
+> Turnkey OAuth2/OIDC for Rust; **desktop loopback flows (RFC 8252)**, **mail-provider presets**, PKCE, crypto, scopes, CSRF, social login, JWKS validation.
 
 [![CI](https://img.shields.io/github/actions/workflow/status/WyattAu/oauth-toolkit/ci.yaml?branch=main)](https://github.com/WyattAu/oauth-toolkit/actions)
 
@@ -14,7 +14,7 @@
 - **RFC 8252 loopback flow, done for you.** `LoopbackFlow` binds
   `127.0.0.1:<ephemeral>`, builds the authorization URL with PKCE (S256) and
   a single-use `state`, captures **exactly one** redirect, then shuts down.
-  The [`oauth2`] crate gives you the protocol primitives — but no turnkey
+  The [`oauth2`] crate gives you the protocol primitives; but no turnkey
   loopback listener; you'd write the socket handling, state check, and
   shutdown logic yourself. Here it's one call: `start` → open URL →
   `wait_for_code`.
@@ -31,13 +31,13 @@
 ## Feature matrix
 
 oauth-toolkit is a **turnkey toolkit for common flows**. Compare scope, not
-quality — [`oauth2`] is the protocol foundation and [`openidconnect`] is the
+quality; [`oauth2`] is the protocol foundation and [`openidconnect`] is the
 deep OIDC implementation:
 
 |                                        | oauth-toolkit | oauth2            | openidconnect     |
 |----------------------------------------|---------------|-------------------|-------------------|
 | Scope                                  | turnkey flows + presets | OAuth2 protocol primitives | OIDC: discovery + ID-token validation |
-| RFC 8252 loopback listener (bind → capture one redirect → shutdown) | **yes, one call** | no — build URLs only, bring your own listener | no |
+| RFC 8252 loopback listener (bind → capture one redirect → shutdown) | **yes, one call** | no; build URLs only, bring your own listener | no |
 | PKCE S256 (generate + server-side verify) | yes        | generate + exchange | via oauth2        |
 | Mail presets with XOAUTH2 scopes (Gmail/Outlook/Yahoo/AOL/Fastmail) | **yes** | no | no |
 | Social login helpers (GitHub, Google)  | yes           | no                | no                |
@@ -52,13 +52,13 @@ deep OIDC implementation:
 - **Not a protocol framework.** `oauth2` covers the full grant surface
   (client credentials, device authorization, extension grants) with total
   control over every request. oauth-toolkit implements the flows apps
-  actually ship — authorization code with PKCE and refresh — and trades
+  actually ship; authorization code with PKCE and refresh; and trades
   configurability for turnkey ergonomics. There is also no device flow,
   no DPoP (RFC 9449), and no PAR (RFC 9126).
 - **ID-token validation is the shallower variant.** [`openidconnect`]
   validates `nonce`, `at_hash`, `azp`, per-`kid` key selection, and
   multiple algorithms. oauth-toolkit's validator is RS256 + issuer/audience
-  with a cached JWKS — right for many apps; if you need certified
+  with a cached JWKS; right for many apps; if you need certified
   relying-party rigor, use `openidconnect`.
 - **Smaller ecosystem / track record.** `oauth2` and `openidconnect` are
   years-deep and widely audited. oauth-toolkit is young; treat the

@@ -1,11 +1,11 @@
-# Threat Model — oauth-toolkit
+# Threat Model: oauth-toolkit
 
 Status: **v1.0** · Method: STRIDE over the public API surface
 (`pkce`, `csrf`, `crypto`, `jwt`, `token`, `oidc`, `oidc_validator`,
 `redirect`, `scope`, `social`, `providers`, `loopback`).
 
 Trust boundaries: (1) the OAuth2 redirect arriving at the loopback
-listener / redirect endpoint (hostile — attacker-controlled query
+listener / redirect endpoint (hostile; attacker-controlled query
 string), (2) network responses from provider token/userinfo/discovery
 endpoints, (3) the local process state (CSRF store, loopback listener
 lifetime), (4) the `hmac`/`sha2`/`jsonwebtoken`/`reqwest` dependency
@@ -38,21 +38,21 @@ tree.
 | T10 | Client secret exposure via diagnostics | Information Disclosure | config types | Secrets are passed as `&str` parameters, not stored in `Debug`-derived structs; no secret material is `Display`/`Debug`-formatted | Design review: `social::SocialProviderConfig`, `build_authorize_url` take secrets by reference; no `derive(Debug)` on secret-bearing payloads (`token` request forms are built, not printed) |
 | T11 | Opaque token predictability | Spoofing | `crypto::generate_opaque_token` | Tokens drawn from the OS RNG (`rand::OsRng`-backed) with configurable byte length | `generate_opaque_token_prefix`, `generate_state_nonce_length` |
 
-## OPEN RISKS (missing mitigations — not fabricated)
+## OPEN RISKS (missing mitigations: not fabricated)
 
-- **OPEN-1 — `MemoryCsrfStore` is per-process.** Multi-instance
+- **OPEN-1; `MemoryCsrfStore` is per-process.** Multi-instance
   deployments cannot share CSRF state; a request landing on a different
   instance fails state validation (fail-closed, but operational). Callers
   needing horizontal scale must supply their own store via
   `CsrfStoreType` delegation.
-- **OPEN-2 — `jwt` module is HS256-only.** No RS256/JWKS-signing path in
+- **OPEN-2; `jwt` module is HS256-only.** No RS256/JWKS-signing path in
   `jwt` itself; `oidc_validator` covers the JWKS-validation direction.
   Callers needing asymmetric signing must use a dedicated JWT crate.
-- **OPEN-3 — token exchange responses are not audited for `scope`
+- **OPEN-3; token exchange responses are not audited for `scope`
   narrowing.** The provider may return a narrower scope set than
   requested; `TokenResponse.scope` is surfaced but not re-validated
   against the allow-list automatically.
-- **OPEN-4 — `loopback` binds a local port per flow.** A local process
+- **OPEN-4; `loopback` binds a local port per flow.** A local process
   could race to bind the fixed port first (denial of the flow, not
   interception); the bind is ephemeral by default
   (`binds_ephemeral_loopback_port`).

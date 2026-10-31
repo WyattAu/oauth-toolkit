@@ -1,7 +1,7 @@
 # Changelog
 
 All notable changes to this project are documented here. Format: [Keep a
-Changelog](https://keepachangelog.com/) — versions follow [semver](https://semver.org).
+Changelog](https://keepachangelog.com/); versions follow [semver](https://semver.org).
 
 ## [0.3.0] - 2026-10-05
 
@@ -10,7 +10,7 @@ Changelog](https://keepachangelog.com/) — versions follow [semver](https://sem
 - **PKCE `plain` is refused by default.** `draft-ietf-oauth-v2-1-16` §7.5.2
   forbids the method outright: its only historical justification was clients
   incapable of SHA-256, and OAuth 2.1 requires TLS 1.2+, which mandates
-  SHA-256 — *"any device capable of implementing OAuth 2.1 necessarily supports
+  SHA-256; *"any device capable of implementing OAuth 2.1 necessarily supports
   SHA-256."* `PkcePolicy::default()` is `S256`-only. RFC 7636 still permits
   `plain`, and FAPI 2.0 forbade it earlier still, so the sources disagree; the
   newest and strictest governs the default.
@@ -19,7 +19,7 @@ Changelog](https://keepachangelog.com/) — versions follow [semver](https://sem
 - **`verify_pkce(&str, &str, &str) -> bool` is replaced by
   `verify(&str, &str, PkceMethod, &PkcePolicy) -> Result<(), PkceError>`.** The
   old signature took the method as a `&str` and returned a bare `bool`, so
-  `"s256"`, `"S-256"` and `"S256 "` were quietly *false* — indistinguishable
+  `"s256"`, `"S-256"` and `"S256 "` were quietly *false*; indistinguishable
   from a wrong verifier. Those are different failures and want different
   responses: a typo is a client bug to report as `invalid_request`, a mismatch
   is a possible attack to refuse as `invalid_grant` revealing nothing. The
@@ -34,7 +34,7 @@ Changelog](https://keepachangelog.com/) — versions follow [semver](https://sem
   that cannot have come from a conforming client is not worth hashing.
 - The RFC 7636 Appendix B vector verbatim (`dBjftJeZ4CVP…` →
   `E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM`). Published test data, not a
-  value this crate produced — the kind of vector that cannot drift.
+  value this crate produced; the kind of vector that cannot drift.
 
 ### Changed (tests)
 
@@ -48,7 +48,7 @@ Changelog](https://keepachangelog.com/) — versions follow [semver](https://sem
 ### Added
 
 - `tests/config_matrix.rs` (10 tests): behavior-observable coverage for the
-  public config knobs — `MemoryCsrfStore::with_ttl` (expiry gates replay;
+  public config knobs; `MemoryCsrfStore::with_ttl` (expiry gates replay;
   cleanup consumes), `SocialProviderConfig` fields (authorize URL changes),
   `OidcConfig` credentials + PKCE verifier (token-exchange POST body over a
   loopback server), and `OidcValidatorConfig` issuer/audience/jwks_uri
@@ -67,12 +67,12 @@ Changelog](https://keepachangelog.com/) — versions follow [semver](https://sem
 ### Docs
 - README and crate docs now lead with the differentiators (RFC 8252
   loopback flow, mail-provider presets, PKCE) and add a feature matrix vs
-  `oauth2` (protocol primitives — no turnkey loopback listener) and
+  `oauth2` (protocol primitives; no turnkey loopback listener) and
   `openidconnect` (deeper ID-token validation), with honest notes on where
   oauth-toolkit lags.
 
 ## [0.2.0] - 2026-09-01
 
 ### Added
-- OAuth2/OIDC primitives — PKCE, crypto, scopes, CSRF, loopback flow, mail presets.
+- OAuth2/OIDC primitives; PKCE, crypto, scopes, CSRF, loopback flow, mail presets.
 - Published to crates.io (2026-09-01).
