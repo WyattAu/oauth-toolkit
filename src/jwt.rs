@@ -59,6 +59,75 @@ pub fn decode_hs256<T: for<'de> Deserialize<'de>>(
     })
 }
 
+/// A signature-validated HS256 token without typed claims: raw header
+/// and payload bytes.
+///
+/// The hot-path variant of [`decode_hs256`]: signature is verified
+/// (constant-time compare) and `alg` is pinned to HS256 (alg-confusion
+/// defense), but NO claim validation runs — no serde deserialization, no
+/// exp/iss/aud checks. For servers with a fixed, tiny payload shape that
+/// parse claims themselves, or callers that need the payload bytes before
+/// choosing a claims type. The caller owns claim validation, including
+/// expiry.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RawHs256 {
+    /// Decoded header JSON (alg/kid/typ as the issuer wrote it).
+    pub header: Vec<u8>,
+    /// Decoded payload JSON, signature verified.
+    pub payload: Vec<u8>,
+}
+
+/// Verify an HS256 token and return its raw parts. See [`RawHs256`].
+///
+/// # Errors
+/// - [`JwtError::Invalid`] on malformed structure, a non-HS256 `alg`
+///   header, or a signature mismatch.
+pub fn decode_hs256_raw(token: &str, secret: &str) -> Result<RawHs256, JwtError> {
+    let mut parts = token.split('.');
+    let (Some(h_b64), Some(p_b64), Some(s_b64), None) =
+        (parts.next(), parts.next(), parts.next(), parts.next())
+    else {
+        return Err(JwtError::Invalid("malformed token: want 3 segments".into()));
+    };
+    if h_b64.is_empty() || p_b64.is_empty() || s_b64.is_empty() {
+        return Err(JwtError::Invalid("empty segment".into()));
+    }
+    let header = b64url_decode_segment(h_b64)?;
+    let payload = b64url_decode_segment(p_b64)?;
+    let sig = b64url_decode_segment(s_b64)?;
+    // alg confusion defense: the header must declare HS256. Parse the
+    // header as JSON (robust) rather than substring-scanning.
+    let hdr: serde_json::Value = serde_json::from_slice(&header)
+        .map_err(|e| JwtError::Invalid(format!("header json: {e}")))?;
+    if hdr.get("alg").and_then(serde_json::Value::as_str) != Some("HS256") {
+        return Err(JwtError::Invalid("alg is not HS256".into()));
+    }
+    // HMAC-SHA256 over "<header>.<payload>" (the original b64 segments)
+    use hmac::Mac;
+    let mut mac = hmac::Hmac::<sha2::Sha256>::new_from_slice(secret.as_bytes())
+        .map_err(|e| JwtError::Invalid(format!("hmac key: {e}")))?;
+    mac.update(h_b64.as_bytes());
+    mac.update(b".");
+    mac.update(p_b64.as_bytes());
+    let expected = mac.finalize().into_bytes();
+    if !crate::crypto::constant_time_eq(&expected, &sig) {
+        return Err(JwtError::Invalid("signature mismatch".into()));
+    }
+    Ok(RawHs256 { header, payload })
+}
+
+/// base64url decode tolerating padded or unpadded input (JWTs omit
+/// padding; some issuers keep it).
+fn b64url_decode_segment(seg: &str) -> Result<Vec<u8>, JwtError> {
+    use base64::Engine;
+    use base64::engine::general_purpose::URL_SAFE_NO_PAD;
+    let trimmed = seg.strip_suffix('=').map_or(seg, |s| s);
+    let trimmed = trimmed.strip_suffix('=').map_or(trimmed, |s| s);
+    URL_SAFE_NO_PAD
+        .decode(trimmed)
+        .map_err(|e| JwtError::Invalid(format!("base64url: {e}")))
+}
+
 /// Encode a claims struct as an ES256 JWT (P-256 ECDSA, PKCS#8 PEM key).
 ///
 /// # Errors
@@ -253,5 +322,111 @@ MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEXInsGq2aoEMBRmObE3YQLOgZfCiI
         parts[1] = "eyJzdWIiOiJldmlsIn0";
         let tampered = parts.join(".");
         assert!(decode_es256::<EsClaims>(&tampered, TEST_ES256_PUB, None, None).is_err());
+    }
+}
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
+mod hs256_raw_tests {
+    use super::*;
+    use serde::Deserialize;
+
+    #[derive(Debug, Serialize, Deserialize, PartialEq)]
+    struct Claims {
+        sub: String,
+        username: String,
+        exp: i64,
+    }
+
+    fn test_claims() -> Claims {
+        Claims {
+            sub: "42".into(),
+            username: "golden_ember".into(),
+            // comfortably in the future; typed decode validates exp
+            exp: (std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs() as i64)
+                + 3600,
+        }
+    }
+
+    #[test]
+    fn round_trip_raw_matches_typed() {
+        let token = encode_hs256(&test_claims(), "secret").unwrap();
+        let raw = decode_hs256_raw(&token, "secret").unwrap();
+        let typed: Claims = serde_json::from_slice(&raw.payload).unwrap();
+        assert_eq!(typed, test_claims());
+        // typed path agrees the token is valid
+        let typed2: Claims = decode_hs256(&token, "secret", None, None).unwrap();
+        assert_eq!(typed2, test_claims());
+    }
+
+    #[test]
+    fn tampered_payload_rejected() {
+        use base64::Engine as _;
+        let token = encode_hs256(&test_claims(), "secret").unwrap();
+        let mut parts: Vec<&str> = token.split('.').collect();
+        // flip payload bytes
+        let payload = base64::engine::general_purpose::URL_SAFE_NO_PAD
+            .decode(parts[1])
+            .unwrap();
+        let mut evil = payload.clone();
+        evil[0] ^= 0x01;
+        let evil_seg = base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(evil);
+        parts[1] = &evil_seg;
+        let evil_token = parts.join(".");
+        assert!(decode_hs256_raw(&evil_token, "secret").is_err());
+    }
+
+    #[test]
+    fn wrong_secret_rejected() {
+        let token = encode_hs256(&test_claims(), "secret").unwrap();
+        assert!(decode_hs256_raw(&token, "other-secret").is_err());
+    }
+
+    #[test]
+    fn alg_confusion_rejected() {
+        use base64::Engine as _;
+        // header says HS512 but signed as HS256: structurally valid JWT,
+        // signature verifies — must STILL be rejected by the alg pin
+        let hdr = base64::engine::general_purpose::URL_SAFE_NO_PAD
+            .encode(br#"{"alg":"HS512","typ":"JWT"}"#);
+        let pl = base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(br#"{"sub":"1"}"#);
+        use hmac::Mac;
+        let mut mac = hmac::Hmac::<sha2::Sha256>::new_from_slice(b"secret").unwrap();
+        mac.update(hdr.as_bytes());
+        mac.update(b".");
+        mac.update(pl.as_bytes());
+        let sig =
+            base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(mac.finalize().into_bytes());
+        let token = format!("{hdr}.{pl}.{sig}");
+        assert!(decode_hs256_raw(&token, "secret").is_err());
+    }
+
+    #[test]
+    fn segment_abuse_rejected() {
+        assert!(decode_hs256_raw("", "secret").is_err());
+        assert!(decode_hs256_raw("a.b", "secret").is_err());
+        assert!(decode_hs256_raw("a.b.c.d", "secret").is_err());
+        assert!(decode_hs256_raw(".b.c", "secret").is_err());
+        assert!(decode_hs256_raw("a..c", "secret").is_err());
+        assert!(decode_hs256_raw("!!!.!!!.!!!", "secret").is_err());
+    }
+
+    #[test]
+    fn exp_is_not_checked_here() {
+        // raw = crypto only: an expired token still decodes (caller owns
+        // claim validation). typed decode_hs256 must reject the same token.
+        let expired = Claims {
+            exp: 1,
+            ..test_claims()
+        };
+        let token = encode_hs256(&expired, "secret").unwrap();
+        assert!(decode_hs256_raw(&token, "secret").is_ok());
+        assert!(matches!(
+            decode_hs256::<Claims>(&token, "secret", None, None),
+            Err(JwtError::Expired)
+        ));
     }
 }

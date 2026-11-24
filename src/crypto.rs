@@ -67,6 +67,18 @@ pub enum CryptoError {
     SignatureMismatch,
 }
 
+/// Constant-time byte equality — for signature/MAC comparisons. Public
+/// within the crate so every MAC path shares one audited implementation.
+pub(crate) fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
+    if a.len() != b.len() {
+        return false;
+    }
+    a.iter()
+        .zip(b.iter())
+        .fold(0u8, |acc, (x, y)| acc | (x ^ y))
+        == 0
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

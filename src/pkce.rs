@@ -22,6 +22,7 @@
 //! parses once and fails loudly; [`verify`] returns a [`PkceOutcome`] that says
 //! which it was.
 
+use crate::crypto::constant_time_eq;
 use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use rand::Rng;
@@ -233,16 +234,6 @@ pub fn verify_with_default_policy(
 fn sha256_base64url(input: &str) -> String {
     let hash = sha2::Sha256::digest(input.as_bytes());
     URL_SAFE_NO_PAD.encode(hash)
-}
-
-fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
-    if a.len() != b.len() {
-        return false;
-    }
-    a.iter()
-        .zip(b.iter())
-        .fold(0u8, |acc, (x, y)| acc | (x ^ y))
-        == 0
 }
 
 #[cfg(test)]
